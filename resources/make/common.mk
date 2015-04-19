@@ -6,7 +6,6 @@ endif
 LIB = $(PROJECT)
 DEPS = ./deps
 BIN_DIR = ./bin
-EXPM = $(BIN_DIR)/expm
 SOURCE_DIR = ./src
 OUT_DIR = ./ebin
 TEST_DIR = ./test
@@ -17,7 +16,7 @@ LFETOOL=$(BIN_DIR)/lfetool
 else
 LFETOOL=lfetool
 endif
-ERL_LIBS=.:..:../loauth:$(shell $(LFETOOL) info erllibs)
+ERL_LIBS=$(shell pwd):$(shell $(LFETOOL) info erllibs):$(shell pwd)
 OS := $(shell uname -s)
 ifeq ($(OS),Linux)
 		HOST=$(HOSTNAME)
@@ -41,10 +40,8 @@ get-version:
 	-eval "lfe_io:format(\"~p~n\",['loauth-util':'get-versions'()])." \
 	-noshell -s erlang halt
 
-$(EXPM): $(BIN_DIR)
-	@[ -f $(EXPM) ] || \
-	@PATH=$(SCRIPT_PATH) ERL_LIBS=$(ERL_LIBS) $(LFETOOL) \
-	install expm $(BIN_DIR)
+show-erllibs:
+	@echo $(ERL_LIBS)
 
 get-deps:
 	@echo "Getting dependencies ..."
@@ -57,13 +54,16 @@ clean-ebin:
 clean-eunit:
 	-@PATH=$(SCRIPT_PATH) $(LFETOOL) tests clean
 
-compile: get-deps clean-ebin
+./ebin/loauth.app:
+	cp src/loauth.app.src ./ebin/loauth.app
+
+compile: get-deps clean-ebin ./ebin/loauth.app
 	@echo "Compiling project code and dependencies ..."
 	@which rebar.cmd >/dev/null 2>&1 && \
 	PATH=$(SCRIPT_PATH) ERL_LIBS=$(ERL_LIBS) rebar.cmd compile || \
 	PATH=$(SCRIPT_PATH) ERL_LIBS=$(ERL_LIBS) rebar compile
 
-compile-no-deps: clean-ebin
+compile-no-deps: clean-ebin ./ebin/loauth.app
 	@echo "Compiling only project code ..."
 	@which rebar.cmd >/dev/null 2>&1 && \
 	PATH=$(SCRIPT_PATH) ERL_LIBS=$(ERL_LIBS) \
@@ -128,14 +128,3 @@ push-all:
 install: compile
 	@echo "Installing loauth ..."
 	@PATH=$(SCRIPT_PATH) lfetool install lfe
-
-upload: $(EXPM) get-version
-	@echo "Preparing to upload loauth ..."
-	@echo
-	@echo "Package file:"
-	@echo
-	@cat package.exs
-	@echo
-	@echo "Continue with upload? "
-	@read
-	$(EXPM) publish
