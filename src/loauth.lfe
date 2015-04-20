@@ -22,14 +22,19 @@
          (binary_to_list)))
 
 (defun get-token-json (username password state)
-  (loauth-client:post (loauth-data-token-uri state)
-                      '(#("Content-Type" "application/x-www-form-urlencoded"))
-                      (++ "grant_type=password&"
-                          "username=" username "&"
-                          "password=" password "&"
-                          "client_id=" (loauth-data-client-id state) "&"
-                          "client_secret=" (loauth-data-client-secret state))))
+  (lhc:post (loauth-data-token-uri state)
+            '(#("Content-Type" "application/x-www-form-urlencoded"))
+            (++ "grant_type=password&"
+                "username=" username "&"
+                "password=" password "&"
+                "client_id=" (loauth-data-client-id state) "&"
+                "client_secret=" (loauth-data-client-secret state))
+            (set-lhc-opts)))
+
 ;;; Support functions
+
+(defun set-lhc-opts ()
+  `(#(callback ,#'loauth-client:parse-results/3)))
 
 (defun get-auth-url
   (((match-loauth-data auth-uri url
