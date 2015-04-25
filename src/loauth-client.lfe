@@ -5,7 +5,7 @@
   ((args _opts `#(ok #(#(,code ,_status) ,headers ,body)))
    (if (follow? (cadr args) code)
        (follow headers)
-       body))
+       #(ok ,body)))
   ((_args _opts x)
    x))
 
