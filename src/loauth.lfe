@@ -18,12 +18,12 @@
 (defun get-token (username password state)
   (let ((result (get-token-json username password state)))
     (case result
-      ((`#(ok ,data))
-        (->> data
-             (ljson:decode)
-             (ljson:get '#("access_token"))
-             (binary_to_list)))
-      ((x) x))))
+      (`#(ok ,data)
+        `#(ok ,(->> data
+                    (ljson:decode)
+                    (ljson:get #("access_token"))
+                    (binary_to_list))))
+      (x x))))
 
 (defun get-token-json (username password state)
   (lhc:post (loauth-data-token-uri state)
